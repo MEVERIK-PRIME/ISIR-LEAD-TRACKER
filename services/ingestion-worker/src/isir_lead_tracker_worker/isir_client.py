@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import logging
+import random
+import time
 from dataclasses import dataclass
 from urllib.parse import parse_qs, urljoin, urlsplit, urlunsplit
 import xml.etree.ElementTree as ET
@@ -11,6 +14,13 @@ from .settings import WorkerSettings
 
 SOAP_ENV_NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
 STATUS_OK = "OK"
+
+_SOAP_RETRY_STATUS_CODES = {429, 500, 502, 503, 504}
+_SOAP_MAX_RETRIES = 4
+_SOAP_RETRY_BASE = 5.0
+_SOAP_RETRY_JITTER = 3.0
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -238,21 +248,37 @@ class IsirPublicWsClient:
 
     def _post_soap_envelope(self, envelope: str) -> httpx.Response:
         failures: list[str] = []
-        for endpoint in self._candidate_ws_urls():
-            try:
-                response = self.http_client.post(
-                    endpoint,
-                    content=envelope.encode("utf-8"),
-                    headers={
-                        "Content-Type": "text/xml; charset=utf-8",
-                        "SOAPAction": '""',
-                    },
-                )
-                response.raise_for_status()
-                self._resolved_public_ws_url = endpoint
-                return response
-            except (httpx.TimeoutException, httpx.TransportError, httpx.HTTPStatusError) as exc:
-                failures.append(f"{endpoint}: {exc}")
+        for attempt in range(_SOAP_MAX_RETRIES + 1):
+            for endpoint in self._candidate_ws_urls():
+                try:
+                    response = self.http_client.post(
+                        endpoint,
+                        content=envelope.encode("utf-8"),
+                        headers={
+                            "Content-Type": "text/xml; charset=utf-8",
+                            "SOAPAction": '""',
+                        },
+                    )
+                    response.raise_for_status()
+                    self._resolved_public_ws_url = endpoint
+                    return response
+                except httpx.HTTPStatusError as exc:
+                    status = exc.response.status_code
+                    failures.append(f"{endpoint}: {exc}")
+                    if status in _SOAP_RETRY_STATUS_CODES and attempt < _SOAP_MAX_RETRIES:
+                        delay = _SOAP_RETRY_BASE * (2 ** attempt) + random.uniform(0, _SOAP_RETRY_JITTER)
+                        _logger.warning(
+                            "ISIR SOAP HTTP %s from %s (attempt %d/%d), retrying in %.1fs",
+                            status, endpoint, attempt + 1, _SOAP_MAX_RETRIES, delay,
+                        )
+                        time.sleep(delay)
+                        break  # retry all endpoints after the delay
+                except (httpx.TimeoutException, httpx.TransportError) as exc:
+                    failures.append(f"{endpoint}: {exc}")
+            else:
+                # exhausted all endpoints without a retryable status — give up
+                if attempt == 0:
+                    break
 
         raise IsirPublicWsError(
             "Unable to reach ISIR_PUBLIC_WS through configured endpoints. "
@@ -325,6 +351,8 @@ class IsirPublicWsClient:
             event = self.fetch_event_by_id(podnet_id)
             if event is not None:
                 events.append(event)
+            if self.settings.isir_request_delay_seconds > 0:
+                time.sleep(self.settings.isir_request_delay_seconds)
 
         numeric_event_ids = [int(event.event_id) for event in events if event.event_id.isdigit()]
 
