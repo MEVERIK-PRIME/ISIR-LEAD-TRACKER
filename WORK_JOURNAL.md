@@ -208,3 +208,15 @@
   - none for this chunk
 - Next step:
   - rerun Railway deploy and verify the container reaches healthy state on Laravel web service
+
+## Entry 015 - Railway rootDirectory alignment
+
+- Completed:
+  - aligned `apps/orchestrator/Dockerfile` to build with context rooted in `apps/orchestrator` (`COPY composer.json composer.lock ./`, `COPY . .`)
+  - updated README deployment note to enforce `Root Directory = apps/orchestrator`
+- Key decisions:
+  - Docker build is now explicitly tied to the service rootDirectory to remove ambiguity between repo-root and subdirectory contexts
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - rerun Railway deploy for web service and verify health, then continue with worker/runtime prove-out

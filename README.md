@@ -135,4 +135,4 @@ Key runtime entrypoints now include:
 - **Project type:** Laravel (PHP 8.3) web app in `apps/orchestrator`
 - **Dockerfile:** yes, at `apps/orchestrator/Dockerfile`
 - **docker-compose:** not required for Railway baseline
-- **Monorepo note:** keep service build context at repo root; Dockerfile already copies `apps/orchestrator/*` paths explicitly
+- **Monorepo note:** for web service keep **Root Directory = `apps/orchestrator`** so Docker build context matches this Dockerfile
