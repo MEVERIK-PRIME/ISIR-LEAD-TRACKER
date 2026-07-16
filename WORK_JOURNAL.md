@@ -232,3 +232,15 @@
   - none for this chunk
 - Next step:
   - redeploy service with repo-root context and verify Laravel container starts healthy
+
+## Entry 017 - Railway Docker WORKDIR correction
+
+- Completed:
+  - corrected both Docker stages to use `WORKDIR /app` for repo-root build context
+  - aligned vendor copy path to `COPY --from=vendor /app/vendor ./vendor`
+- Key decisions:
+  - keep monorepo-prefixed `COPY apps/orchestrator/...` paths with repo-root context, but avoid nested workdir to prevent path mismatch
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - rerun Railway deploy and verify startup reaches healthy web container state
