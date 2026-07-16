@@ -271,3 +271,17 @@
   - pending async user confirmation; proceeded autonomously due offline mode
 - Next step:
   - redeploy from latest commit, verify HTTP 200 on public URL, then continue live ISIR retrieval proof
+
+## Entry 020 - eISIR compatibility defaults refresh
+
+- Completed:
+  - switched default `ISIR_PUBLIC_WS_URL` to `https://isir.justice.cz:8443/isir_public_ws/IsirWsPublicService` across worker settings, Laravel config, and all env templates
+  - updated env sync script defaults to the same primary SOAP endpoint while keeping fallback list in place
+  - aligned unit/runtime tests and README notes with the official web-service-first integration strategy (no HTML scraping)
+- Key decisions:
+  - keep SOAP/XML compatibility as primary integration path despite portal UI redesign
+  - retain fallback endpoint chain for resilience when one public endpoint degrades
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - redeploy with refreshed defaults and continue live retrieval + runtime E2E proof

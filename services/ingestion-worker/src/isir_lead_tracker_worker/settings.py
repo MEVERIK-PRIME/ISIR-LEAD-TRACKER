@@ -20,7 +20,7 @@ class WorkerSettings(BaseSettings):
     database_url: str = ""
     redis_url: str = ""
 
-    isir_public_ws_url: str = "https://isir.justice.cz/isir_public_ws/webservice"
+    isir_public_ws_url: str = "https://isir.justice.cz:8443/isir_public_ws/IsirWsPublicService"
     isir_public_ws_fallback_urls: str = (
         "https://isir.justice.cz:8443/isir_public_ws/IsirWsPublicService,"
         "https://isir.justice.cz/isir_public_ws/IsirWsPublicService"

@@ -22,6 +22,11 @@ Version 1 targets one concrete end-to-end workflow:
 - Google Sheets delivery and operator status workflow
 - Railway deployment baseline for app, worker, cron, Postgres, and Redis
 
+## ISIR integration note (2026)
+
+- Public portal presentation moved to `eisir.justice.cz`, but v1 integration remains on the compatible SOAP/XML `isir_public_ws` contract.
+- This project does **not** rely on HTML scraping from the portal UI; source acquisition is via official web services only.
+
 ## Version 1 scope
 
 This repository is for the first complete production-capable version only.

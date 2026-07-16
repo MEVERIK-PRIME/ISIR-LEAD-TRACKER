@@ -123,8 +123,8 @@ class IsirClientTest(TestCase):
 
     def test_client_falls_back_to_next_endpoint_after_primary_failure(self) -> None:
         requested_urls: list[str] = []
-        primary = "https://isir.justice.cz/isir_public_ws/webservice"
-        fallback = "https://isir.justice.cz:8443/isir_public_ws/IsirWsPublicService"
+        primary = "https://isir.justice.cz:8443/isir_public_ws/IsirWsPublicService"
+        fallback = "https://isir.justice.cz/isir_public_ws/IsirWsPublicService"
 
         settings = WorkerSettings(
             isir_public_ws_url=primary,

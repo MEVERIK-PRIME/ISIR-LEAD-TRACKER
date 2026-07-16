@@ -17,7 +17,7 @@ class WorkerTaskPayloadTest extends TestCase
             limit: 25,
             context: [
                 'source' => [
-                    'public_ws_url' => 'https://isir.justice.cz/isir_public_ws/webservice',
+                    'public_ws_url' => 'https://isir.justice.cz:8443/isir_public_ws/IsirWsPublicService',
                     'document_base_url' => 'https://isir.justice.cz/isir/common/stat.do',
                     'use_hlidac_statu' => true,
                 ],

@@ -2,7 +2,7 @@
 
 return [
     'sources' => [
-        'public_ws_url' => env('ISIR_PUBLIC_WS_URL', 'https://isir.justice.cz/isir_public_ws/webservice'),
+        'public_ws_url' => env('ISIR_PUBLIC_WS_URL', 'https://isir.justice.cz:8443/isir_public_ws/IsirWsPublicService'),
         'document_base_url' => env('ISIR_DOCUMENT_BASE_URL', 'https://isir.justice.cz/isir/common/stat.do'),
         'use_hlidac_statu' => env('ENABLE_HLIDAC_STATU', true),
     ],
