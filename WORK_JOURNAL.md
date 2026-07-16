@@ -379,3 +379,16 @@
   - none for this chunk
 - Next step:
   - point Railway worker service to the new Dockerfile and redeploy; then verify `LLEN isir:tasks` decreases from 1 to 0
+
+## Entry 028 - Worker startup resiliency on Redis failures
+
+- Completed:
+  - hardened the Redis consumer loop to handle transient `redis.RedisError` without process exit
+  - added retry delay and explicit logging for Redis read failures
+  - added payload decode guard so malformed bytes do not crash the worker process
+- Key decisions:
+  - keep worker process alive under transient infrastructure errors to avoid manual restarts
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - redeploy worker and confirm logs continue after startup plus queue length drains from `1` to `0`

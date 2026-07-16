@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 import httpx
 import redis
@@ -28,12 +29,23 @@ class RedisQueueWorker:
         self.logger.info("Starting Redis queue consumer for queue=%s", queue_name)
 
         while True:
-            item = self.redis_client.brpop(queue_name, timeout=timeout_seconds)
+            try:
+                item = self.redis_client.brpop(queue_name, timeout=timeout_seconds)
+            except redis.RedisError as exc:
+                self.logger.error("Redis read failed for queue=%s: %s", queue_name, exc)
+                time.sleep(3)
+                continue
+
             if item is None:
                 continue
 
             _, raw_payload = item
-            payload_text = self._payload_text(raw_payload)
+            try:
+                payload_text = self._payload_text(raw_payload)
+            except UnicodeDecodeError as exc:
+                self.logger.error("Discarding undecodable worker payload: %s", exc)
+                continue
+
             self._process_payload(payload_text)
 
     def _process_payload(self, payload_text: str) -> None:
