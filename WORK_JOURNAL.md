@@ -167,3 +167,17 @@
   - none for this chunk
 - Next step:
   - run a production-shaped retrieval probe from Railway network context and finalize the stable endpoint order for deployment env variables
+
+## Entry 012 - Private GitHub repository and first push
+
+- Completed:
+  - initialized local git repository on branch `main` and created initial baseline commit
+  - hardened root `.gitignore` to exclude Python cache/build artifacts from future commits
+  - created private GitHub repo `MEVERIK-PRIME/ISIR-LEAD-TRACKER` and pushed `main` with tracking to `origin/main`
+- Key decisions:
+  - repository publishing was executed now so Railway GitHub deployment can proceed against a stable private remote
+  - secret files remain untracked (`.env` still ignored; only `.env.example` is committed)
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - trigger Railway deployment from `main`, capture build/runtime logs, and run live ISIR retrieval + full E2E prove-out
