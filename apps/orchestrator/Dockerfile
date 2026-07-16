@@ -1,6 +1,7 @@
 FROM composer:2 AS vendor
 WORKDIR /app
-COPY apps/orchestrator/composer.json apps/orchestrator/composer.lock ./
+# Copy entire app first (we need artisan and app/ for post-autoload-dump hooks)
+COPY apps/orchestrator/. .
 RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
 FROM php:8.3-cli-alpine
