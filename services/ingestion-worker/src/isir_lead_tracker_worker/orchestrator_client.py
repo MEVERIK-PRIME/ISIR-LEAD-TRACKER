@@ -32,3 +32,20 @@ class OrchestratorImportClient:
         )
         response.raise_for_status()
         return response.json()
+
+    def advance_checkpoint(self, provider: str, stream: str, checkpoint_value: str) -> dict[str, Any]:
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+
+        if self.settings.internal_api_token:
+            headers["X-Internal-Token"] = self.settings.internal_api_token
+
+        response = self.http_client.post(
+            self.settings.orchestrator_checkpoint_url,
+            json={"provider": provider, "stream": stream, "checkpoint_value": checkpoint_value},
+            headers=headers,
+        )
+        response.raise_for_status()
+        return response.json()

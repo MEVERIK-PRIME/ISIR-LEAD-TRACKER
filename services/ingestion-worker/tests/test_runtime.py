@@ -99,7 +99,40 @@ class RuntimeTest(TestCase):
         self.assertEqual("secret-token", seen_headers["token"])
         self.assertEqual(1, response["data"]["document_id"])
 
-    def test_runtime_filters_events_and_submits_only_importable_documents(self) -> None:
+    def test_orchestrator_client_advance_checkpoint_posts_to_derived_url(self) -> None:
+        seen: dict[str, object] = {}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen["url"] = str(request.url)
+            seen["body"] = json.loads(request.content.decode("utf-8"))
+            seen["token"] = request.headers.get("X-Internal-Token", "")
+            return httpx.Response(200, json={"ok": True, "checkpoint_value": "99"})
+
+        client = OrchestratorImportClient(
+            settings=WorkerSettings(
+                internal_api_token="secret-token",
+                orchestrator_import_url="http://localhost/api/internal/isir/parsed-documents",
+            ),
+            http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+        )
+
+        client.advance_checkpoint("isir_public_ws", "events", "99")
+
+        self.assertEqual("http://localhost/api/internal/advance-checkpoint", seen["url"])
+        self.assertEqual(
+            {"provider": "isir_public_ws", "stream": "events", "checkpoint_value": "99"},
+            seen["body"],
+        )
+        self.assertEqual("secret-token", seen["token"])
+
+    def test_checkpoint_url_derived_from_import_url(self) -> None:
+        s = WorkerSettings(
+            orchestrator_import_url="http://myhost/api/internal/isir/parsed-documents"
+        )
+        self.assertEqual(
+            "http://myhost/api/internal/advance-checkpoint",
+            s.orchestrator_checkpoint_url,
+        )
         calls: list[dict[str, object]] = []
 
         def handler(request: httpx.Request) -> httpx.Response:

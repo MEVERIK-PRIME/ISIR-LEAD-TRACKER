@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlparse, urlunparse
 
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -87,6 +88,19 @@ class WorkerSettings(BaseSettings):
     enable_hlidac_statu: bool = True
     enable_gemini: bool = True
     enable_groq_fallback: bool = True
+
+    @computed_field
+    @property
+    def orchestrator_checkpoint_url(self) -> str:
+        """Derive checkpoint-advancement URL from the import URL base.
+
+        e.g. http://host/api/internal/isir/parsed-documents
+          →  http://host/api/internal/advance-checkpoint
+        """
+        p = urlparse(self.orchestrator_import_url)
+        parts = p.path.rstrip("/").rsplit("/", 2)
+        base_path = "/".join(parts[:-2]) if len(parts) >= 3 else ""
+        return urlunparse(p._replace(path=f"{base_path}/advance-checkpoint"))
 
     @computed_field
     @property

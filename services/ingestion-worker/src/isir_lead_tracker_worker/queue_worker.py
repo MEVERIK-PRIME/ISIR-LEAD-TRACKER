@@ -94,6 +94,21 @@ class RedisQueueWorker:
             result.get("next_checkpoint"),
         )
 
+        next_checkpoint = result.get("next_checkpoint")
+        if next_checkpoint and str(next_checkpoint) != "0":
+            try:
+                self.runtime.orchestrator_client.advance_checkpoint(
+                    provider=envelope.provider,
+                    stream=envelope.stream,
+                    checkpoint_value=str(next_checkpoint),
+                )
+            except Exception as exc:  # noqa: BLE001
+                self.logger.warning(
+                    "Checkpoint advance failed for task_id=%s (non-fatal): %s",
+                    envelope.task_id,
+                    exc,
+                )
+
     def _build_redis_client(self) -> redis.Redis:
         if not self.settings.redis_url:
             raise ValueError("REDIS_URL must be configured for worker queue consumption.")
