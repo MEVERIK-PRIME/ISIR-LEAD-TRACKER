@@ -4,7 +4,7 @@ WORKDIR /app
 COPY apps/orchestrator/. .
 RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
-FROM php:8.3-cli-alpine
+FROM php:8.4-cli-alpine
 WORKDIR /app
 
 RUN apk add --no-cache bash libpq-dev \
