@@ -195,3 +195,16 @@
   - none for this chunk
 - Next step:
   - deploy web service on Railway from `apps/orchestrator`, then capture logs and continue with worker/runtime prove-out
+
+## Entry 014 - Railway build context fix for Laravel Dockerfile
+
+- Completed:
+  - fixed `apps/orchestrator/Dockerfile` to copy `composer.json` and `composer.lock` from monorepo path `apps/orchestrator/*`
+  - adjusted Dockerfile working directory and source copy paths so build succeeds when Railway uses repo-root build context
+  - updated README deployment note to keep Railway service build context at repo root
+- Key decisions:
+  - monorepo Dockerfile now assumes repo-root context and explicit path copies, which is robust against Railway rootDirectory mismatch
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - rerun Railway deploy and verify the container reaches healthy state on Laravel web service
