@@ -26,7 +26,7 @@ class WorkerSettings(BaseSettings):
         "https://isir.justice.cz/isir_public_ws/IsirWsPublicService"
     )
     isir_document_base_url: str = "https://isir.justice.cz/isir/common/stat.do"
-    isir_final_report_token: str = "konec"
+    isir_final_report_token: str = "konec,zaverecna"
     isir_sync_provider: str = "isir_public_ws"
     isir_sync_stream: str = "events"
     isir_sync_batch_size: int = 250

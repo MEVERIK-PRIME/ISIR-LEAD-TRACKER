@@ -138,8 +138,10 @@ def pick_next_checkpoint(events: list[IsirSourceEvent], fallback: str) -> str:
 
 def event_matches_final_report(label: str, settings: WorkerSettings) -> bool:
     normalized_label = normalize_text(label)
-    normalized_token = normalize_text(settings.isir_final_report_token)
-    return normalized_token in normalized_label
+    # isir_final_report_token may be comma-separated to match multiple variants
+    # e.g. "konec,zaverecna" catches both "konečná zpráva" and "závěrečná zpráva"
+    tokens = [t.strip() for t in settings.isir_final_report_token.split(",") if t.strip()]
+    return any(normalize_text(token) in normalized_label for token in tokens)
 
 
 def parse_status(root: ET.Element) -> IsirResponseStatus:

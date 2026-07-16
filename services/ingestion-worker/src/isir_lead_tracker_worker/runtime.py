@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable
 
 from .contracts import WorkerTaskEnvelope
@@ -9,13 +10,18 @@ from .isir_client import IsirEventBatch, IsirSourceEvent, IsirPublicWsClient, ev
 from .orchestrator_client import OrchestratorImportClient
 from .settings import WorkerSettings
 
+logger = logging.getLogger(__name__)
+
 
 def event_matches_prefilter(event: IsirSourceEvent, envelope: WorkerTaskEnvelope, settings: WorkerSettings) -> bool:
     section = envelope.context.filters.section.strip().upper()
     if (event.section or "").strip().upper() != section:
         return False
 
-    return event_matches_final_report(event.label, settings)
+    matches = event_matches_final_report(event.label, settings)
+    if not matches:
+        logger.debug("Section B skipped (no final_report_token match): %r", event.label)
+    return matches
 
 
 def build_parsed_document(event: IsirSourceEvent, settings: WorkerSettings) -> ParsedCaseDocument | None:
