@@ -27,14 +27,24 @@ class RedisQueueWorker:
     def consume_forever(self, timeout_seconds: int = 5) -> None:
         queue_name = self.settings.worker_task_queue
         self.logger.info("Starting Redis queue consumer for queue=%s", queue_name)
+        backoff_seconds = 2
+        max_backoff_seconds = 60
 
         while True:
             try:
                 item = self.redis_client.brpop(queue_name, timeout=timeout_seconds)
             except redis.RedisError as exc:
-                self.logger.error("Redis read failed for queue=%s: %s", queue_name, exc)
-                time.sleep(3)
+                self.logger.error(
+                    "Redis read failed for queue=%s: %s. Retrying in %ss",
+                    queue_name,
+                    exc,
+                    backoff_seconds,
+                )
+                time.sleep(backoff_seconds)
+                backoff_seconds = min(backoff_seconds * 2, max_backoff_seconds)
                 continue
+
+            backoff_seconds = 2
 
             if item is None:
                 continue

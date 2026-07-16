@@ -392,3 +392,15 @@
   - none for this chunk
 - Next step:
   - redeploy worker and confirm logs continue after startup plus queue length drains from `1` to `0`
+
+## Entry 029 - Exponential Redis backoff in worker consumer
+
+- Completed:
+  - upgraded Redis read retry strategy in `RedisQueueWorker.consume_forever` from fixed delay to exponential backoff
+  - added retry log with next wait duration and reset backoff after successful queue reads
+- Key decisions:
+  - cap backoff at 60s to avoid tight failure loops while keeping recovery responsive
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - redeploy worker and verify logs show sustained process with retries (if needed) until queue drains
