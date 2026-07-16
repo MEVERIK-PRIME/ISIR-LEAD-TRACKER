@@ -85,10 +85,12 @@ class RedisQueueWorker:
             return
 
         self.logger.info(
-            "Processed task_id=%s fetched=%s submitted=%s next_checkpoint=%s",
+            "Processed task_id=%s fetched=%s filtered=%s submitted=%s skipped_no_doc=%s next_checkpoint=%s",
             envelope.task_id,
             result.get("fetched_events"),
+            result.get("filtered_events"),
             result.get("submitted_documents"),
+            result.get("skipped_missing_document"),
             result.get("next_checkpoint"),
         )
 
