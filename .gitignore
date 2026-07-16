@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+
+*.json
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.pytest_cache/
+venv/
+.venv/
+node_modules/
+vendor/
+tools/

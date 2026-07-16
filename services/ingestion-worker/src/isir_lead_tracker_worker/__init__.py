@@ -1,0 +1,2 @@
+"""ISIR ingestion worker package."""
+
