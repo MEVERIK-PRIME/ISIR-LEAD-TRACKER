@@ -141,8 +141,10 @@ Key runtime entrypoints now include:
 
 - **Project type:** Laravel (PHP 8.4) web app in `apps/orchestrator`
 - **Dockerfile:** yes, at `apps/orchestrator/Dockerfile`
+- **Worker Dockerfile:** yes, at `services/ingestion-worker/Dockerfile`
 - **docker-compose:** not required for Railway baseline
 - **Monorepo note:** for web service use repo-root build context (`rootDirectory = null`) and `dockerfilePath = apps/orchestrator/Dockerfile`
+  - for worker service use repo-root build context (`rootDirectory = null`) and `dockerfilePath = services/ingestion-worker/Dockerfile`
 
 ### Required Railway env baseline for `isir-lead-tracker`
 

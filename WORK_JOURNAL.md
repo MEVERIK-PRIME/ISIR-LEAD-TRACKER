@@ -367,3 +367,15 @@
   - none for this chunk
 - Next step:
   - deploy worker service with start command `isir-worker --consume-queue` and verify Redis queue length drains to 0 after dispatch
+
+## Entry 027 - Worker runtime packaging fix
+
+- Completed:
+  - added `services/ingestion-worker/Dockerfile` to build a deterministic Python worker image that installs the package and exposes `isir-worker`
+  - documented Railway worker deployment path (`dockerfilePath = services/ingestion-worker/Dockerfile`) for monorepo setup
+- Key decisions:
+  - prefer custom Dockerfile over implicit buildpacks so worker command availability does not depend on platform auto-detection
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - point Railway worker service to the new Dockerfile and redeploy; then verify `LLEN isir:tasks` decreases from 1 to 0
