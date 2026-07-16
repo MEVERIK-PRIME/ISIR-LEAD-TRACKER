@@ -404,3 +404,22 @@
   - none for this chunk
 - Next step:
   - redeploy worker and verify logs show sustained process with retries (if needed) until queue drains
+
+## Entry 030 - Fix two-hop dispatch: remove Laravel queue intermediary
+
+- Completed:
+  - root cause identified: `isir:dispatch-sync` dispatched `EnqueueIsirSyncTask` into the Laravel queue (`default`), which required a running `php artisan queue:work` process to process it and push to the Python Redis queue; Railway had no such process, so tasks never reached the Python worker
+  - refactored `DispatchIsirSyncCommand` to call `WorkerTaskDispatcher::dispatch()` directly, bypassing the job queue layer entirely
+  - checkpoint status now set to `dispatched` immediately in the command (was previously split across two steps)
+  - `EnqueueIsirSyncTask` job class kept in codebase but no longer used in the primary sync path
+  - added broad `except Exception` catch in `queue_worker._process_payload` to prevent silent worker crash on SOAP or unexpected errors; all exceptions now logged with full traceback
+- Key decisions:
+  - the Laravel queue intermediary was an architectural over-engineering for this use case; the Python worker IS the async queue, so no Laravel queue worker is needed
+  - `QUEUE_CONNECTION=sync` alternative considered but not needed since we removed the job dispatch
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - commit and push, wait for Railway redeploy
+  - verify `ORCHESTRATOR_IMPORT_URL` is set to the correct Railway app URL in worker service variables
+  - verify `INTERNAL_API_TOKEN` matches between orchestrator and worker
+  - run `isir:dispatch-sync --from=0 --limit=50`, watch worker log for `Processed task_id=` or error traceback

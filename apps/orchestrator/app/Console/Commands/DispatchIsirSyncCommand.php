@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\EnqueueIsirSyncTask;
 use App\Models\SyncCheckpoint;
+use App\Services\Isir\WorkerTaskDispatcher;
 use App\Support\Isir\WorkerTaskPayload;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -24,7 +24,7 @@ class DispatchIsirSyncCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle(WorkerTaskDispatcher $dispatcher): int
     {
         $provider = (string) ($this->option('provider') ?: config('isir.sync.default_provider'));
         $stream = (string) ($this->option('stream') ?: config('isir.sync.default_stream'));
@@ -79,21 +79,21 @@ class DispatchIsirSyncCommand extends Command
             return self::SUCCESS;
         }
 
+        $dispatcher->dispatch($payload->toArray());
+
         $checkpoint->forceFill([
-            'status' => 'queued',
+            'status' => 'dispatched',
+            'last_seen_reference' => $startingCheckpoint,
             'meta' => array_merge(Arr::wrap($checkpoint->meta), [
-                'last_enqueued_task_id' => $payload->taskId,
-                'last_enqueued_mode' => $mode,
-                'last_enqueued_at' => Carbon::now()->toIso8601String(),
+                'last_dispatched_task_id' => $payload->taskId,
+                'last_dispatched_mode' => $mode,
+                'last_dispatched_at' => Carbon::now()->toIso8601String(),
                 'last_requested_limit' => $limit,
             ]),
         ])->save();
 
-        EnqueueIsirSyncTask::dispatch($payload->toArray())
-            ->onQueue((string) config('isir.queue.orchestrator_queue', 'default'));
-
         $this->info(sprintf(
-            'Queued %s sync task %s for %s/%s from checkpoint %s.',
+            'Dispatched %s sync task %s for %s/%s from checkpoint %s.',
             $mode,
             $payload->taskId,
             $provider,

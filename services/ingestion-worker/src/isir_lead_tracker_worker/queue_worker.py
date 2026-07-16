@@ -68,7 +68,20 @@ class RedisQueueWorker:
         try:
             result = self.runtime.run_sync_task(envelope)
         except httpx.HTTPError as exc:
-            self.logger.error("Orchestrator request failed for task_id=%s: %s", envelope.task_id, exc)
+            self.logger.error(
+                "Orchestrator HTTP request failed for task_id=%s: %s",
+                envelope.task_id,
+                exc,
+                exc_info=True,
+            )
+            return
+        except Exception as exc:  # noqa: BLE001
+            self.logger.error(
+                "Unexpected error processing task_id=%s: %s",
+                envelope.task_id,
+                exc,
+                exc_info=True,
+            )
             return
 
         self.logger.info(
