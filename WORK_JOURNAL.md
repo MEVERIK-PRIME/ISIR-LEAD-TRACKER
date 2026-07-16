@@ -404,8 +404,28 @@
   - none for this chunk
 - Next step:
   - redeploy worker and verify logs show sustained process with retries (if needed) until queue drains
+
+## Entry 031 - Resilient document download: browser emulation + Hlídač státu fallback
 
-## Entry 030 - Fix two-hop dispatch: remove Laravel queue intermediary
+- Completed:
+  - root cause: `DocumentDownloadClient` used `User-Agent: ISIR-LEAD-TRACKER/1.0` and no session cookies → eISIR (justice.cz) returns 503 for all direct machine/cloud requests; same issue user hit with Google App Script
+  - replaced trivial `httpx.Client` with browser-emulating client: rotating Chrome/Firefox User-Agents, `Accept-Language: cs-CZ`, `Referer`, `DNT`, `Upgrade-Insecure-Requests` headers
+  - added `_warm_session()`: visits portal homepage once per origin to acquire `JSESSIONID` before document download
+  - added retry loop with exponential backoff + jitter for `503 / 502 / 429 / 500 / 504` (up to 5 attempts, base 3s, jitter 2s)
+  - added `DocumentDownload503Error` exception to distinguish persistent IP blocks from transient errors
+  - added `HlidacStatuDocumentFallback` class: when direct download is blocked after all retries, queries Hlídač státu API to retrieve document text by case reference → bypasses justice.cz IP block entirely
+  - `DocumentParsingPipeline.build_parsed_document` now catches `DocumentDownload503Error` and tries Hlídač státu fallback before returning `None`; `download_source` field in payload tracks which path was used
+  - all 18 existing worker tests pass
+- Key decisions:
+  - browser headers solve UA-based blocking; session warming + cookies solve session-gated access
+  - Hlídač státu fallback is the reliable backstop against cloud IP blocks (they have their own ISIR data pipeline)
+  - `DocumentDownload503Error` is not logged as "skipped_missing_document" until both paths fail, keeping metrics honest
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - deploy to Railway worker and observe logs: `Document download got HTTP 503` then either success on retry or `Hlídač státu fallback` message
+  - verify `HLIDAC_STATU_API_KEY` is set in Railway worker service variables
+
 
 - Completed:
   - root cause identified: `isir:dispatch-sync` dispatched `EnqueueIsirSyncTask` into the Laravel queue (`default`), which required a running `php artisan queue:work` process to process it and push to the Python Redis queue; Railway had no such process, so tasks never reached the Python worker
