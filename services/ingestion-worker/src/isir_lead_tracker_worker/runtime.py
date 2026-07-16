@@ -52,6 +52,11 @@ class WorkerRuntime:
         import_results: list[dict[str, Any]] = []
 
         for event in filtered_events:
+            doc_url = event.document.source_url if event.document else "(no document)"
+            logger.info(
+                "Final report event matched: id=%s case=%r label=%r doc_url=%r",
+                event.event_id, event.case_reference, event.label, doc_url,
+            )
             parsed_document = self.document_builder(event, self.settings)
             if parsed_document is None:
                 skipped_missing_document += 1

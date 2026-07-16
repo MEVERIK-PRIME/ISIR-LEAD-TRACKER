@@ -35,7 +35,7 @@ class WorkerSettings(BaseSettings):
     isir_latest_id_request_element: str = "getIsirWsPublicPosledniIdDataRequest"
     isir_checkpoint_field: str = "idPodnetu"
     isir_timeout_seconds: int = 90
-    isir_request_delay_seconds: float = 0.3
+    isir_request_delay_seconds: float = 0.5
     orchestrator_import_url: str = "http://localhost/api/internal/isir/parsed-documents"
     internal_api_token: str | None = None
     lead_min_claim_amount: int = 300_000
