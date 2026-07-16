@@ -443,3 +443,25 @@
   - verify `ORCHESTRATOR_IMPORT_URL` is set to the correct Railway app URL in worker service variables
   - verify `INTERNAL_API_TOKEN` matches between orchestrator and worker
   - run `isir:dispatch-sync --from=0 --limit=50`, watch worker log for `Processed task_id=` or error traceback
+
+## Entry 032 - Checkpoint advancement callback
+
+- Completed:
+  - root cause: `SyncCheckpoint.checkpoint_value` was stuck at `'0'` forever because the worker never reported `next_checkpoint` back to the orchestrator; every un-qualified `isir:dispatch-sync --limit=N` restarted from checkpoint 0
+  - added `orchestrator_checkpoint_url` computed field to `WorkerSettings` (derived from `orchestrator_import_url` by stripping last 2 path segments and appending `advance-checkpoint`)
+  - added `advance_checkpoint(provider, stream, checkpoint_value)` to `OrchestratorImportClient` using same `X-Internal-Token` auth header pattern
+  - `queue_worker._process_payload` now calls `advance_checkpoint` after every successful task; failure is non-fatal (logs WARNING only, does not crash or discard the task result)
+  - new `AdvanceCheckpointController` in Laravel (`POST /api/internal/advance-checkpoint`): finds-or-creates `SyncCheckpoint` row, updates `checkpoint_value` and sets `status = 'idle'`
+  - new route registered in `routes/api.php`
+  - 2 new tests added; all 19 worker tests pass
+  - commit `7083919` pushed to Railway
+- Key decisions:
+  - checkpoint advance is non-fatal so that a temporary orchestrator outage doesn't cause work to be lost; next dispatch can pass `--from=` manually if checkpoint drifts
+  - URL derivation is computed (not a separate env var) to reduce Railway variable sprawl
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - wait for Railway redeploy; verify `Checkpoint advance failed` does NOT appear in logs
+  - dispatch `isir:dispatch-sync --from=79380000 --limit=200` × 5–10 (≈1000–2000 events) to find first `filtered > 0`
+  - confirm `SyncCheckpoint.checkpoint_value` advances in the DB between dispatches
+  - once `filtered > 0`, verify document download path and `submitted > 0` → `Lead::count() > 0`
