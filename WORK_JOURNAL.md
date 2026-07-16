@@ -220,3 +220,15 @@
   - none for this chunk
 - Next step:
   - rerun Railway deploy for web service and verify health, then continue with worker/runtime prove-out
+
+## Entry 016 - Railway repo-root context fallback
+
+- Completed:
+  - switched `apps/orchestrator/Dockerfile` back to monorepo-prefixed copy paths (`COPY apps/orchestrator/...`) for repo-root build context
+  - updated README deployment note to `rootDirectory = null` and `dockerfilePath = apps/orchestrator/Dockerfile`
+- Key decisions:
+  - Railway deployment is now standardized on repo-root context because service behavior consistently resolves paths there
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - redeploy service with repo-root context and verify Laravel container starts healthy
