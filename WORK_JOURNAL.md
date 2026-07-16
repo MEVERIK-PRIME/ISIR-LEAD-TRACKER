@@ -285,3 +285,72 @@
   - none for this chunk
 - Next step:
   - redeploy with refreshed defaults and continue live retrieval + runtime E2E proof
+
+## Entry 021 - Live ISIR timeout hardening
+
+- Completed:
+  - reproduced live `ISIR_PUBLIC_WS` probe against `https://isir.justice.cz:8443/isir_public_ws/IsirWsPublicService` and confirmed successful SOAP response for `getIsirWsPublicPosledniIdDataRequest`
+  - identified root cause of worker live-retrieval failure as timeout budget (`ISIR_TIMEOUT_SECONDS=30`) being too low for real endpoint latency
+  - raised default timeout to `90` in worker settings and propagated `ISIR_TIMEOUT_SECONDS` through root/service env templates and env sync script
+  - updated README runtime contract and Railway baseline env list with the timeout requirement
+- Key decisions:
+  - keep `:8443` endpoint as primary and treat higher timeout as baseline production stability guardrail
+  - codify timeout in env contracts so Railway and local environments stay aligned
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - redeploy worker/runtime with `ISIR_TIMEOUT_SECONDS=90` and run full runtime E2E prove-out (worker task -> Laravel import -> DB/Sheets sync)
+
+## Entry 022 - Runtime E2E prove-out closure
+
+- Completed:
+  - fixed ISIR SOAP event-by-id request payload so `idPodnetu` is sent as unqualified XML element (required by live WS schema validation)
+  - fixed document URL normalization to preserve explicit `:8443` port, which resolved live document download 404 on final-report documents
+  - exempted internal import endpoint `api/internal/isir/parsed-documents` from CSRF while keeping token auth (`X-Internal-Token`)
+  - executed production-shaped local runtime flow with live ISIR event `79487007` and confirmed worker -> orchestrator import handoff succeeded (`submitted_documents=1`, `document_id=1`)
+- Key decisions:
+  - keep ISIR WS contract strict to observed runtime schema behavior (latest-id + event-by-id with unqualified checkpoint field)
+  - keep internal ingest endpoint in web routing but enforce auth by shared token and explicit CSRF exception for machine-to-machine calls
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - propagate the same env baseline (`ISIR_TIMEOUT_SECONDS=90`, `INTERNAL_API_TOKEN`) to Railway worker/web services and run hosted E2E with Sheets-enabled credentials
+
+## Entry 023 - Railway 500 mitigation for root and internal ingest
+
+- Completed:
+  - moved internal ingest endpoint registration from `routes/web.php` to new `routes/api.php` and enabled API routing in `bootstrap/app.php`
+  - removed now-unneeded CSRF exception for `api/internal/isir/parsed-documents` because API middleware path is stateless
+  - replaced root `/` page rendering with a lightweight JSON status response to avoid Blade/Vite runtime coupling on production startup
+- Key decisions:
+  - isolate machine-to-machine ingest from web/session middleware to prevent session-store-related 500 failures on Railway
+  - keep `/up` health endpoint unchanged and make `/` deterministic for external probes
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - deploy this revision to Railway and verify `/` returns 200 plus `/api/internal/isir/parsed-documents` returns 401 for invalid token and 200 for valid token
+
+## Entry 024 - Google Sheets push 400 fix
+
+- Completed:
+  - fixed Google Sheets API request construction so `valueInputOption=USER_ENTERED` is sent only on values update calls, not globally on all requests
+  - removed the invalid query parameter from `values:clear` requests, which was causing HTTP 400 (`Unknown name "valueInputOption"`)
+- Key decisions:
+  - keep clear calls minimal and API-compliant; apply write options only where supported by the endpoint
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - deploy this revision and re-run `php artisan leads:sync-sheet --direction=push` in Railway shell
+
+## Entry 025 - Google Sheets request hardening
+
+- Completed:
+  - replaced shared HTTP request helper in `GoogleSheetsClient` with explicit per-endpoint request construction
+  - forced `valueInputOption=USER_ENTERED` into true query parameters via `send('PUT', ..., ['query' => ...])` for values update calls
+  - changed clear payload to explicit empty JSON object to avoid endpoint schema ambiguity
+- Key decisions:
+  - remove implicit request-state behavior and rely on explicit request options per Google endpoint to avoid accidental payload pollution
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - redeploy and rerun `php artisan leads:sync-sheet --direction=push` to verify Google API 400 is cleared

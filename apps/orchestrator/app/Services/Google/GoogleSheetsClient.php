@@ -15,7 +15,8 @@ class GoogleSheetsClient
 
     public function fetchRows(string $columnsRange): array
     {
-        $response = $this->request()
+        $response = Http::withToken($this->accessTokenProvider->getAccessToken())
+            ->acceptJson()
             ->get($this->valuesUrl($columnsRange))
             ->throw()
             ->json();
@@ -25,30 +26,29 @@ class GoogleSheetsClient
 
     public function clearRows(string $columnsRange): void
     {
-        $this->request()
-            ->post($this->valuesUrl($columnsRange).':clear', [])
+        Http::withToken($this->accessTokenProvider->getAccessToken())
+            ->acceptJson()
+            ->asJson()
+            ->post($this->valuesUrl($columnsRange).':clear', (object) [])
             ->throw();
     }
 
     public function writeRows(string $startCellRange, array $rows): void
     {
-        $this->request()
-            ->put($this->valuesUrl($startCellRange), [
-                'range' => $this->sheetRange($startCellRange),
-                'majorDimension' => 'ROWS',
-                'values' => $rows,
-            ])
-            ->throw();
-    }
-
-    private function request()
-    {
-        return Http::withToken($this->accessTokenProvider->getAccessToken())
+        Http::withToken($this->accessTokenProvider->getAccessToken())
             ->acceptJson()
             ->asJson()
-            ->withQueryParameters([
-                'valueInputOption' => 'USER_ENTERED',
-            ]);
+            ->send('PUT', $this->valuesUrl($startCellRange), [
+                'query' => [
+                    'valueInputOption' => 'USER_ENTERED',
+                ],
+                'json' => [
+                    'range' => $this->sheetRange($startCellRange),
+                    'majorDimension' => 'ROWS',
+                    'values' => $rows,
+                ],
+            ])
+            ->throw();
     }
 
     private function valuesUrl(string $range): string

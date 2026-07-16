@@ -106,6 +106,7 @@ Additional internal runtime wiring now expects:
 - `INTERNAL_API_TOKEN` - shared secret between the Python worker and Laravel internal import API
 - `ORCHESTRATOR_IMPORT_URL` - worker callback URL, defaulting to `http://localhost/api/internal/isir/parsed-documents`
 - `ISIR_PUBLIC_WS_FALLBACK_URLS` - comma-separated SOAP endpoint candidates used when the primary ISIR endpoint returns transport or HTTP errors
+- `ISIR_TIMEOUT_SECONDS` - SOAP/document timeout budget; keep at least `90` for production because `:8443` responses can exceed 30 seconds
 
 ## Current cross-service flow
 
@@ -137,7 +138,7 @@ Key runtime entrypoints now include:
 
 ## Railway deployment answers (current state)
 
-- **Project type:** Laravel (PHP 8.3) web app in `apps/orchestrator`
+- **Project type:** Laravel (PHP 8.4) web app in `apps/orchestrator`
 - **Dockerfile:** yes, at `apps/orchestrator/Dockerfile`
 - **docker-compose:** not required for Railway baseline
 - **Monorepo note:** for web service use repo-root build context (`rootDirectory = null`) and `dockerfilePath = apps/orchestrator/Dockerfile`
@@ -154,6 +155,7 @@ Set these values directly on the Laravel service (do not reference `todo-api`):
 - `REDIS_URL` (Railway Redis reference)
 - `QUEUE_CONNECTION=redis`
 - `INTERNAL_API_TOKEN=<shared-secret>`
+- `ISIR_TIMEOUT_SECONDS=90`
 
 Optional integration vars (only if used in this phase): `HLIDAC_STATU_API_KEY`, `GOOGLE_*`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `ARES_BASE_URL`.
 

@@ -102,7 +102,7 @@ def normalize_document_url(url: str, settings: WorkerSettings) -> str:
     if not parsed.scheme and not parsed.netloc:
         return urljoin(settings.isir_document_base_url, url)
 
-    host = parsed.hostname or urlsplit(settings.isir_document_base_url).hostname or ""
+    netloc = parsed.netloc or urlsplit(settings.isir_document_base_url).netloc or parsed.hostname or ""
     path = parsed.path
 
     if path.startswith("/isir_public_ws/doc/Document") and not parsed.query:
@@ -110,7 +110,7 @@ def normalize_document_url(url: str, settings: WorkerSettings) -> str:
     else:
         query = parsed.query
 
-    return urlunsplit(("https", host, path, query, ""))
+    return urlunsplit(("https", netloc, path, query, ""))
 
 
 def extract_document_reference(element: ET.Element, settings: WorkerSettings) -> IsirDocumentReference | None:
@@ -272,7 +272,7 @@ class IsirPublicWsClient:
   <soapenv:Header/>
   <soapenv:Body>
     <isir:{self.settings.isir_event_by_id_request_element}>
-      <isir:{self.settings.isir_checkpoint_field}>{podnet_id}</isir:{self.settings.isir_checkpoint_field}>
+      <{self.settings.isir_checkpoint_field}>{podnet_id}</{self.settings.isir_checkpoint_field}>
     </isir:{self.settings.isir_event_by_id_request_element}>
   </soapenv:Body>
 </soapenv:Envelope>"""

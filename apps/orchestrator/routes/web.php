@@ -1,10 +1,10 @@
 <?php
 
-use App\Http\Controllers\Internal\ImportParsedCaseDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return response()->json([
+        'service' => 'isir-lead-tracker',
+        'status' => 'ok',
+    ]);
 });
-
-Route::post('/api/internal/isir/parsed-documents', ImportParsedCaseDocumentController::class);

@@ -54,14 +54,14 @@ class IsirClientTest(TestCase):
     def setUp(self) -> None:
         self.settings = WorkerSettings()
 
-    def test_document_url_normalization_removes_8443_port(self) -> None:
+    def test_document_url_normalization_keeps_explicit_port(self) -> None:
         normalized = normalize_document_url(
             "https://isir.justice.cz:8443/isir_public_ws/doc/Document?idDokument=31670169",
             self.settings,
         )
 
         self.assertEqual(
-            "https://isir.justice.cz/isir_public_ws/doc/Document?idDokument=31670169",
+            "https://isir.justice.cz:8443/isir_public_ws/doc/Document?idDokument=31670169",
             normalized,
         )
 
@@ -75,7 +75,7 @@ class IsirClientTest(TestCase):
         self.assertEqual("Konečná zpráva insolvenčního správce", batch.events[0].label)
         self.assertEqual("31670169", batch.events[0].document.document_id)
         self.assertEqual(
-            "https://isir.justice.cz/isir_public_ws/doc/Document?idDokument=31670169",
+            "https://isir.justice.cz:8443/isir_public_ws/doc/Document?idDokument=31670169",
             batch.events[0].document.normalized_url,
         )
 
@@ -93,7 +93,7 @@ class IsirClientTest(TestCase):
         latest_envelope = client.build_latest_id_envelope()
 
         self.assertIn("<isir:getIsirWsPublicIdDataRequest>", event_envelope)
-        self.assertIn("<isir:idPodnetu>56789</isir:idPodnetu>", event_envelope)
+        self.assertIn("<idPodnetu>56789</idPodnetu>", event_envelope)
         self.assertIn("<isir:getIsirWsPublicPosledniIdDataRequest/>", latest_envelope)
 
     def test_incremental_batch_fetches_latest_id_then_missing_events(self) -> None:
@@ -106,7 +106,7 @@ class IsirClientTest(TestCase):
             if "getIsirWsPublicPosledniIdDataRequest" in body:
                 return httpx.Response(200, text=SAMPLE_LATEST_ID_RESPONSE)
 
-            event_id = body.split("<isir:idPodnetu>", 1)[1].split("</isir:idPodnetu>", 1)[0]
+            event_id = body.split("<idPodnetu>", 1)[1].split("</idPodnetu>", 1)[0]
             event_response = SAMPLE_EVENT_RESPONSE.replace("<ns:id>12345</ns:id>", f"<ns:id>{event_id}</ns:id>", 1)
             return httpx.Response(200, text=event_response)
 
@@ -141,7 +141,7 @@ class IsirClientTest(TestCase):
             if "getIsirWsPublicPosledniIdDataRequest" in body:
                 return httpx.Response(200, text=SAMPLE_LATEST_ID_RESPONSE)
 
-            event_id = body.split("<isir:idPodnetu>", 1)[1].split("</isir:idPodnetu>", 1)[0]
+            event_id = body.split("<idPodnetu>", 1)[1].split("</idPodnetu>", 1)[0]
             event_response = SAMPLE_EVENT_RESPONSE.replace("<ns:id>12345</ns:id>", f"<ns:id>{event_id}</ns:id>", 1)
             return httpx.Response(200, text=event_response)
 
