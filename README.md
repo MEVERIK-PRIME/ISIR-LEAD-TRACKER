@@ -122,6 +122,7 @@ The repository now has a stable internal import seam:
 Key runtime entrypoints now include:
 
 - `isir:dispatch-sync` - schedules incremental or backfill worker tasks
+- `isir-worker --consume-queue` - runs the Python worker consumer that drains `isir:tasks` from Redis
 - `creditors:enrich --limit=100` - re-enriches existing creditors and re-qualifies their leads
 - `leads:sync-sheet --direction=both` - keeps the Google Sheet synchronized with DB state and operator changes
 

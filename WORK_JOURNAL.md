@@ -354,3 +354,16 @@
   - none for this chunk
 - Next step:
   - redeploy and rerun `php artisan leads:sync-sheet --direction=push` to verify Google API 400 is cleared
+
+## Entry 026 - Worker Redis consumer implementation
+
+- Completed:
+  - added a Redis queue consumer for the Python worker (`RedisQueueWorker`) that continuously reads `isir:tasks` using `BRPOP`
+  - wired CLI flag `--consume-queue` into `isir-worker` so Railway worker service can run as a long-lived consumer process
+  - added `redis` Python dependency and documented the new runtime entrypoint
+- Key decisions:
+  - keep queue consumption in worker process (not Laravel) so `EnqueueIsirSyncTask` remains enqueue-only and Python worker owns ISIR extraction + import cycle
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - deploy worker service with start command `isir-worker --consume-queue` and verify Redis queue length drains to 0 after dispatch

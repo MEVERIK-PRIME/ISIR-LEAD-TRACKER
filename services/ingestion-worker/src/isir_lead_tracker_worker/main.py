@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .contracts import WorkerTaskEnvelope
 from .document_contract import ParsedCaseDocument
+from .queue_worker import RedisQueueWorker
 from .runtime import WorkerRuntime
 from .settings import WorkerSettings, load_settings
 
@@ -39,6 +40,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Execute a worker sync task payload from a JSON file.",
     )
+    parser.add_argument(
+        "--consume-queue",
+        action="store_true",
+        help="Continuously consume sync tasks from Redis queue.",
+    )
     return parser
 
 
@@ -51,6 +57,7 @@ def settings_summary(settings: WorkerSettings) -> dict[str, object]:
         "llm_chain": [settings.llm_primary_provider, settings.llm_fallback_provider],
         "hlidac_statu_enabled": settings.enable_hlidac_statu,
         "lead_amount_range": [settings.lead_min_claim_amount, settings.lead_max_claim_amount],
+        "worker_task_queue": settings.worker_task_queue,
     }
 
 
@@ -79,6 +86,10 @@ def main() -> None:
         payload = WorkerTaskEnvelope.model_validate_json(read_json_text(args.run_payload_file))
         result = WorkerRuntime(settings=settings).run_sync_task(payload)
         logging.getLogger(__name__).info("Executed worker sync task: %s", result)
+        return
+
+    if args.consume_queue:
+        RedisQueueWorker(settings=settings).consume_forever()
         return
 
     if args.print_settings:
