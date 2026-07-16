@@ -129,3 +129,10 @@ Key runtime entrypoints now include:
 2. harden claim extraction on real final-report samples
 3. run the first full end-to-end happy path with real payloads
 4. prepare Railway runbook and deployment validation
+
+## Railway deployment answers (current state)
+
+- **Project type:** Laravel (PHP 8.3) web app in `apps/orchestrator`
+- **Dockerfile:** yes, at `apps/orchestrator/Dockerfile`
+- **docker-compose:** not required for Railway baseline
+- **Monorepo note:** in Railway set service **Root Directory** to `apps/orchestrator` for the web service

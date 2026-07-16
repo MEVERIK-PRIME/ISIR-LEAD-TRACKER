@@ -181,3 +181,17 @@
   - none for this chunk
 - Next step:
   - trigger Railway deployment from `main`, capture build/runtime logs, and run live ISIR retrieval + full E2E prove-out
+
+## Entry 013 - Railway web container baseline
+
+- Completed:
+  - added Docker deployment baseline for Laravel orchestrator (`apps/orchestrator/Dockerfile`)
+  - added service-local docker ignore file (`apps/orchestrator/.dockerignore`)
+  - documented exact Railway answers and root-directory setup in repo README
+- Key decisions:
+  - Railway web service should be configured from monorepo path `apps/orchestrator` (not from repo root)
+  - docker-compose is not required for the baseline Railway deploy path
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - deploy web service on Railway from `apps/orchestrator`, then capture logs and continue with worker/runtime prove-out
