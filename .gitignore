@@ -3,6 +3,8 @@
 !.env.example
 
 *.json
+!apps/orchestrator/composer.json
+!apps/orchestrator/package.json
 __pycache__/
 *.pyc
 *.pyo

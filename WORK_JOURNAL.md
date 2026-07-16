@@ -244,3 +244,16 @@
   - none for this chunk
 - Next step:
   - rerun Railway deploy and verify startup reaches healthy web container state
+
+## Entry 018 - Missing composer manifest tracked
+
+- Completed:
+  - identified root cause of Railway `/composer.json not found`: `apps/orchestrator/composer.json` existed locally but was excluded by root `.gitignore` (`*.json`)
+  - narrowed ignore behavior by adding explicit allow rules for `apps/orchestrator/composer.json` and `apps/orchestrator/package.json`
+  - staged both manifest files for repository tracking so Railway archive includes them
+- Key decisions:
+  - keep generic JSON ignore for secret-safety, but whitelist required build manifests for Laravel service
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - push manifest fix and rerun Railway deploy on current Dockerfile
