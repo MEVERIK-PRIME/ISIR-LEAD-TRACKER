@@ -257,3 +257,17 @@
   - none for this chunk
 - Next step:
   - push manifest fix and rerun Railway deploy on current Dockerfile
+
+## Entry 019 - Runtime hardening for Railway 502
+
+- Completed:
+  - simplified Laravel container start command to `php artisan serve` only (removed `config:clear` + `route:clear` pre-steps that can crash startup)
+  - documented explicit Railway env baseline for `isir-lead-tracker` with direct variables (no `todo-api` references)
+  - recorded current deployment reality check: public URL probe still returns 502 until env/deploy alignment is corrected
+- Key decisions:
+  - prioritize runtime reliability over pre-start cache cleanup in container entrypoint
+  - treat `todo-api` linkage as non-v1 drift and keep Laravel service configuration self-contained
+- Approvals needed:
+  - pending async user confirmation; proceeded autonomously due offline mode
+- Next step:
+  - redeploy from latest commit, verify HTTP 200 on public URL, then continue live ISIR retrieval proof

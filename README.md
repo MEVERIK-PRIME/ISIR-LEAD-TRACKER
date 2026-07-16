@@ -136,3 +136,20 @@ Key runtime entrypoints now include:
 - **Dockerfile:** yes, at `apps/orchestrator/Dockerfile`
 - **docker-compose:** not required for Railway baseline
 - **Monorepo note:** for web service use repo-root build context (`rootDirectory = null`) and `dockerfilePath = apps/orchestrator/Dockerfile`
+
+### Required Railway env baseline for `isir-lead-tracker`
+
+Set these values directly on the Laravel service (do not reference `todo-api`):
+
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `APP_KEY=base64:...` (generate once via `php artisan key:generate --show`)
+- `APP_URL=https://isir-lead-tracker-production.up.railway.app`
+- `DATABASE_URL` (Railway Postgres reference)
+- `REDIS_URL` (Railway Redis reference)
+- `QUEUE_CONNECTION=redis`
+- `INTERNAL_API_TOKEN=<shared-secret>`
+
+Optional integration vars (only if used in this phase): `HLIDAC_STATU_API_KEY`, `GOOGLE_*`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `ARES_BASE_URL`.
+
+If public URL returns 502, first verify the latest deploy is running this commit and check service logs for missing `APP_KEY` / invalid env references.
