@@ -11,6 +11,7 @@ import time
 from urllib.parse import urlsplit
 
 import httpx
+from pydantic import ValidationError
 from pypdf import PdfReader
 
 from .document_contract import ParsedCaseDocument, ParsedClaim
@@ -163,15 +164,24 @@ def parse_claims_from_text(text: str) -> list[ParsedClaim]:
         if amount is None:
             continue
 
-        claims.append(
-            ParsedClaim(
-                creditor_name=creditor_name,
-                amount_czk=amount,
-                secured=detect_secured(line),
-                claim_type=detect_claim_type(line),
-                raw_excerpt=line,
+        # Zero-value rows are common in summary/administrative lines and should
+        # not fail the entire event processing.
+        if amount <= 0:
+            continue
+
+        try:
+            claims.append(
+                ParsedClaim(
+                    creditor_name=creditor_name,
+                    amount_czk=amount,
+                    secured=detect_secured(line),
+                    claim_type=detect_claim_type(line),
+                    raw_excerpt=line,
+                )
             )
-        )
+        except ValidationError as exc:
+            logger.warning("Skipping invalid parsed claim line: %s (%s)", line[:200], exc.errors())
+            continue
 
     return claims
 

@@ -465,3 +465,17 @@
   - dispatch `isir:dispatch-sync --from=79380000 --limit=200` × 5–10 (≈1000–2000 events) to find first `filtered > 0`
   - confirm `SyncCheckpoint.checkpoint_value` advances in the DB between dispatches
   - once `filtered > 0`, verify document download path and `submitted > 0` → `Lead::count() > 0`
+
+## Entry 033 - Zero-amount claim crash hardening
+
+- Completed:
+  - hardened worker claim parsing so zero-value rows are skipped before Pydantic model creation
+  - added graceful handling for invalid parsed claim rows (`ValidationError`) to avoid whole-task failure on single bad line
+  - added worker test coverage that proves `0 Kč` rows are ignored while valid claims in the same document are still processed
+- Key decisions:
+  - keep `ParsedClaim.amount_czk > 0` as a strict domain invariant
+  - treat `amount=0` lines as non-actionable for lead qualification/import and skip them instead of persisting
+- Approvals needed:
+  - none for this chunk
+- Next step:
+  - deploy worker update to Railway and confirm previously failing tasks complete with `submitted_documents`/`imports` instead of validation crash

@@ -68,6 +68,18 @@ class DocumentPipelineTest(TestCase):
         self.assertEqual("principal", claims[1].claim_type)
         self.assertEqual("costs", claims[2].claim_type)
 
+    def test_claim_parser_skips_zero_amount_rows(self) -> None:
+        text_with_zero_row = """
+        Dodavatel Zero s.r.o. - nezajištěná pohledávka ve výši 0 Kč
+        Dodavatel One s.r.o. - nezajištěná pohledávka ve výši 350 000 Kč
+        """
+
+        claims = parse_claims_from_text(text_with_zero_row)
+
+        self.assertEqual(1, len(claims))
+        self.assertEqual("Dodavatel One s.r.o.", claims[0].creditor_name)
+        self.assertEqual(Decimal("350000"), claims[0].amount_czk)
+
     def test_pipeline_builds_parsed_document_with_real_claims(self) -> None:
         document = DownloadedDocument(
             url="https://isir.justice.cz/example.txt",
